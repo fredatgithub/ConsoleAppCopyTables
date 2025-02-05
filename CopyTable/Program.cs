@@ -1,5 +1,8 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq.Expressions;
 using Npgsql;
 
 namespace CopyTable
@@ -26,7 +29,7 @@ namespace CopyTable
       if (tablesToUpdate.Count == 0)
       {
         Display("No tables to update.");
-        
+
       }
       else
       {
@@ -163,17 +166,58 @@ namespace CopyTable
 
     private static string GetConnectionString()
     {
-      return "Host=localhost;Username=toto;Password=titi;Database=tutu";
+      string connectionStringFromFile = ReadFile("connectionString.txt");
+      if (!string.IsNullOrEmpty(connectionStringFromFile))
+      {
+        return connectionStringFromFile;
+      }
+
+      return "Host=localhost;Username=username;Password=password;Database=database_name";
+    }
+
+    private static string ReadFile(string filename)
+    {
+      try
+      {
+        // read the file filename and return its content
+        if (!File.Exists(filename))
+        {
+          File.Create(filename).Close();
+          WriteToFile(filename, "Host=localhost;Username=username;Password=password;Database=database_name");
+          return string.Empty;
+        }
+
+        return File.ReadAllText(filename);
+      }
+      catch (Exception)
+      {
+        return string.Empty;
+      }
+    }
+
+    private static void WriteToFile(string filename, string message)
+    {
+      try
+      {
+        // write the message to the file filename
+        File.WriteAllText(filename, message);
+      }
+      catch (Exception)
+      {
+        // ignored
+      }
     }
 
     private static string GetTriggerTodisableSqlRequest()
     {
-      return "SELECT 'ALTER TABLE ' || event_object_table || ' DISABLE TRIGGER ' || trigger_name || ';' from information_schema.triggers where trigger_schema = current_user;";
+      const string sqlRequest = "SELECT 'ALTER TABLE ' || event_object_table || ' DISABLE TRIGGER ' || trigger_name || ';' from information_schema.triggers where trigger_schema = current_user;";
+      return sqlRequest;
     }
 
     private static string GetTriggerToEnableSqlRequest()
     {
-      return "SELECT 'ALTER TABLE ' || event_object_table || ' ENABLE TRIGGER ' || trigger_name || ';' from information_schema.triggers where trigger_schema = current_user;";
+      const string sqlRequest = "SELECT 'ALTER TABLE ' || event_object_table || ' ENABLE TRIGGER ' || trigger_name || ';' from information_schema.triggers where trigger_schema = current_user;";
+      return sqlRequest;
     }
 
     private static List<string> GetTriggerListFromDatabase(string sqlRequest, string connectionString)
