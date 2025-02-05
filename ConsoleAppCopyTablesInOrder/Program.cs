@@ -56,7 +56,7 @@ namespace ConsoleAppCopyTablesInOrder
 
     private static List<string> GetUpdateOrder(string tableName)
     {
-      var connectionString = "Host=localhost;Username=username;Password=password;Database=database_name";
+      const string connectionString = "Host=localhost;Username=username;Password=password;Database=database_name";
       var tablesToUpdate = new List<string>();
 
       using (var connection = new NpgsqlConnection(connectionString))
