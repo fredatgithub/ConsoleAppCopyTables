@@ -1,8 +1,6 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq.Expressions;
 using Npgsql;
 
 namespace CopyTable
@@ -16,11 +14,18 @@ namespace CopyTable
       // disable first all triggers
       string sqlRequest = GetTriggerTodisableSqlRequest();
       var triggerList = GetTriggerListFromDatabase(sqlRequest, connectionString);
-      bool disableTriggersOk = EnableOrDisableTriggers(connectionString, triggerList);
-      if (!disableTriggersOk)
+      if (triggerList.Count > 0)
       {
-        Display("Error while disabling triggers.");
-        return;
+        bool disableTriggersOk = EnableOrDisableTriggers(connectionString, triggerList);
+        if (!disableTriggersOk)
+        {
+          Display("Error while disabling triggers.");
+          return;
+        }
+      }
+      else
+      {
+        Display("No trigger were found");
       }
 
       // get prerequisite tables to be updated first
@@ -29,7 +34,6 @@ namespace CopyTable
       if (tablesToUpdate.Count == 0)
       {
         Display("No tables to update.");
-
       }
       else
       {
